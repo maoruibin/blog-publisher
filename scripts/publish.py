@@ -20,10 +20,42 @@ from urllib.parse import quote, urlencode
 from urllib import request
 from urllib.error import HTTPError, URLError
 
-# ==================== 配置（从环境变量读取）====================
+# ==================== 配置（优先从 .env 文件读取）====================
+
+def load_env_file(env_path=None):
+    """加载 .env 文件"""
+    if env_path is None:
+        # 查找 .env 文件：脚本目录 -> 用户主目录
+        script_dir = Path(__file__).parent.parent
+        possible_paths = [
+            script_dir / '.env',
+            Path.home() / '.github-blog.env',
+        ]
+        for path in possible_paths:
+            if path.exists():
+                env_path = path
+                break
+
+    if env_path and env_path.exists():
+        with open(env_path, 'r', encoding='utf-8') as f:
+            for line in f:
+                line = line.strip()
+                # 跳过注释和空行
+                if not line or line.startswith('#'):
+                    continue
+                # 解析 KEY=VALUE
+                if '=' in line:
+                    key, value = line.split('=', 1)
+                    key = key.strip()
+                    value = value.strip().strip('"').strip("'")
+                    # .env 文件的值总是覆盖环境变量
+                    os.environ[key] = value
 
 def get_config():
-    """从环境变量读取配置，关键配置必须设置"""
+    """从 .env 文件或环境变量读取配置，关键配置必须设置"""
+    # 先尝试加载 .env 文件
+    load_env_file()
+
     config = {
         # 必需配置（因人而异）
         'token': os.getenv('GITHUB_BLOG_TOKEN'),
@@ -37,6 +69,7 @@ def get_config():
         'layout': os.getenv('GITHUB_BLOG_LAYOUT', 'post'),
         'default_category': os.getenv('GITHUB_BLOG_DEFAULT_CATEGORY', 'blog'),
         'default_tags': os.getenv('GITHUB_BLOG_DEFAULT_TAGS', 'daily'),
+        'domain': os.getenv('GITHUB_BLOG_DOMAIN'),  # 自定义域名，如：blog.gudong.site
     }
 
     # 验证必需配置
@@ -47,9 +80,14 @@ def get_config():
         'author': 'GITHUB_BLOG_AUTHOR',
     }
 
+    missing = []
     for key, env_var in required.items():
         if not config[key]:
-            raise ValueError(f'请设置环境变量 {env_var}')
+            missing.append(env_var)
+
+    if missing:
+        raise ValueError(f'缺少配置: {", ".join(missing)}\n'
+                        f'请在技能目录创建 .env 文件，参考 .env.example')
 
     return config
 
@@ -323,8 +361,8 @@ def publish_article(filepath):
 
     # 7. 确定目标文件名
     target_filename = f"{date}-{title}.md"
-    # 清理文件名中的特殊字符
-    target_filename = re.sub(r'[<>:"|?*]', '', target_filename)
+    # 清理文件名中的特殊字符（包括中英文标点）
+    target_filename = re.sub(r'[<>:"|?*？：，、。！；''""（）【】《》]', '', target_filename)
     target_filename = re.sub(r'\s+', '-', target_filename)
 
     target_path = f"{config['posts_dir']}/{target_filename}"
@@ -338,7 +376,18 @@ def publish_article(filepath):
     )
 
     # 9. 返回结果
-    post_url = f"https://{config['repo']}/{date}-{title.replace(' ', '-').lower()}.html"
+    # 生成文章 URL（Jekyll 格式：/:year/:month/:day/:title.html）
+    # 支持自定义域名
+    # 注意：URL 必须与文件名一致，因为 Jekyll 根据文件名生成 permalink
+    from urllib.parse import quote
+    year, month, day = date.split('-')
+    # 清理标题：与文件名生成逻辑一致
+    clean_title = title
+    clean_title = re.sub(r'[<>:"|?*？：，、。！；''""（）【】《》]', '', clean_title)  # 去除中英文标点
+    clean_title = clean_title.replace(' ', '-')           # 空格转连字符
+    # URL 编码
+    encoded_title = quote(clean_title, safe='')
+    post_url = f"https://{config.get('domain') or config['repo']}/{year}/{month}/{day}/{encoded_title}.html"
 
     print()
     print("=" * 50)

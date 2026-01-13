@@ -1,0 +1,3 @@
+# 配置文件（包含敏感信息，不提交）
+.env
+.github-blog.env

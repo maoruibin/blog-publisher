@@ -1,5 +1,5 @@
 ---
-name: github-blog-publisher
+name: blog-publisher
 description: Publish local markdown files to GitHub Pages blog (Jekyll). Use this skill when the user wants to publish a local markdown article to their GitHub blog, automatically converting frontmatter to Jekyll format, uploading local images, and pushing to the repository via GitHub API.
 license: MIT
 ---
@@ -17,27 +17,39 @@ license: MIT
 
 ## 使用前配置
 
-在 `~/.zshrc` 或 `~/.bash_profile` 中添加以下环境变量：
+### 配置方式（推荐）：使用 .env 文件
+
+在技能目录创建 `.env` 文件：
+
+```bash
+cd ~/.claude/skills/blog-publisher
+cp .env.example .env
+```
+
+编辑 `.env` 文件：
 
 ```bash
 # ===== 必需配置 =====
-export GITHUB_BLOG_TOKEN="your_github_personal_access_token"
-export GITHUB_BLOG_USER="your_username"
-export GITHUB_BLOG_REPO="your_username.github.io"
-export GITHUB_BLOG_AUTHOR="你的名字"
+GITHUB_BLOG_TOKEN=your_github_personal_access_token
+GITHUB_BLOG_USER=your_username
+GITHUB_BLOG_REPO=your_username.github.io
+GITHUB_BLOG_AUTHOR=你的名字
 
-# ===== 可选配置（有默认值）=====
-export GITHUB_BLOG_BRANCH="master"             # 默认: master
-export GITHUB_BLOG_POSTS_DIR="_posts"          # 默认: _posts
-export GITHUB_BLOG_IMAGES_DIR="images"         # 默认: images
-export GITHUB_BLOG_LAYOUT="post"               # 默认: post
-export GITHUB_BLOG_DEFAULT_CATEGORY="blog"     # 默认: blog
-export GITHUB_BLOG_DEFAULT_TAGS="daily"        # 默认: daily
+# ===== 可选配置 =====
+GITHUB_BLOG_DOMAIN=blog.yourdomain.com  # 自定义域名（可选）
+GITHUB_BLOG_LAYOUT=post                 # Jekyll layout
 ```
 
-**获取 GitHub Token**：
+> **说明**：`.env` 文件包含敏感信息，已加入 `.gitignore` 不会提交到 GitHub。配置一次，永久有效。
+
+### 获取 GitHub Token
+
 1. 访问 https://github.com/settings/tokens
 2. 生成新 Token，勾选 `repo` 权限
+
+### 备选方式：环境变量
+
+如果不想用 `.env` 文件，也可以在 `~/.zshrc` 中设置环境变量（变量名相同）。
 
 ## 使用方式
 
@@ -52,11 +64,11 @@ Claude: [调用技能]
 
 ```
 2026-01-11-AI-编程实践心得.md
-YYYY-MM-DD-标题.md
+drafts/2026-01-11-AI-编程实践心得/article.md
 ```
 
 - 日期会自动提取作为文章日期
-- 标题会从文件名解析（连字符转为空格）
+- 标题会从文件名/目录名解析（连字符转为空格）
 
 ## Frontmatter 转换
 
@@ -73,11 +85,12 @@ category: AI
 **输出（Jekyll 格式）：**
 ```yaml
 ---
-layout: mypost
-author: 咕咚
+layout: post
+author: 你的名字
 tags: daily
 categories: blog
 title: "AI 编程实践心得"
+date: 2026-01-11
 ---
 ```
 
@@ -103,11 +116,13 @@ title: "AI 编程实践心得"
 {
   "title": "AI 编程实践心得",
   "date": "2026-01-11",
-  "filename": "2026-01-11-AI-编程实践心得.md",
-  "post_url": "https://maoruibin.github.com/2026-01-11-ai-编程实践心得.html",
-  "github_url": "https://github.com/maoruibin/maoruibin.github.com/blob/master/_posts/2026-01-11-AI-编程实践心得.md"
+  "filename": "2026-01-11-ai-bian-cheng-shi-jian-xin-de.md",
+  "post_url": "https://blog.gudong.site/2026/01/11/ai-bian-cheng-shi-jian-xin-de.html",
+  "github_url": "https://github.com/user/repo/blob/master/_posts/2026-01-11-ai-bian-cheng-shi-jian-xin-de.md"
 }
 ```
+
+**文章 URL 格式**：Jekyll 默认格式 `/:year/:month/:day/:title.html`
 
 ## 资源
 

@@ -1,6 +1,15 @@
 # 配置参考
 
-## 环境变量
+## 配置方式（推荐）：使用 .env 文件
+
+在技能目录创建 `.env` 文件：
+
+```bash
+cd ~/.claude/skills/blog-publisher
+cp .env.example .env
+```
+
+## 配置项说明
 
 ### 必需配置（必须设置）
 
@@ -21,23 +30,24 @@
 | `GITHUB_BLOG_LAYOUT` | `post` | Jekyll 布局模板 |
 | `GITHUB_BLOG_DEFAULT_CATEGORY` | `blog` | 文章分类 |
 | `GITHUB_BLOG_DEFAULT_TAGS` | `daily` | 文章标签 |
+| `GITHUB_BLOG_DOMAIN` | 无 | 自定义域名，如 `blog.gudong.site` |
 
-## 快速配置（咕咚专用）
+## 自定义域名说明
+
+如果你使用了自定义域名（如 blog.gudong.site），需要设置 `GITHUB_BLOG_DOMAIN`：
 
 ```bash
-# 添加到 ~/.zshrc
-cat >> ~/.zshrc << 'EOF'
+GITHUB_BLOG_DOMAIN=blog.gudong.site
+```
 
-# GitHub Blog Publisher
-export GITHUB_BLOG_TOKEN="d6b501c3101dc476b74ee86837889099342ce0"
-export GITHUB_BLOG_USER="maoruibin"
-export GITHUB_BLOG_REPO="maoruibin.github.com"
-export GITHUB_BLOG_AUTHOR="咕咚"
-export GITHUB_BLOG_LAYOUT="mypost"
-EOF
+这样生成的文章链接就是：
+```
+https://blog.gudong.site/2026/01/11/your-title.html
+```
 
-# 重新加载配置
-source ~/.zshrc
+如果不设置，则使用仓库名生成链接：
+```
+https://username.github.io/2026/01/11/your-title.html
 ```
 
 ## 获取 GitHub Token
@@ -48,3 +58,22 @@ source ~/.zshrc
    - ✅ repo (Full control of private repositories)
 4. 点击 "Generate token"
 5. 复制 token（只显示一次！）
+
+## 备选方式：环境变量
+
+如果不想用 `.env` 文件，也可以在 `~/.zshrc` 中设置环境变量：
+
+```bash
+cat >> ~/.zshrc << 'EOF'
+
+# GitHub Blog Publisher
+export GITHUB_BLOG_TOKEN="your_token"
+export GITHUB_BLOG_USER="your_username"
+export GITHUB_BLOG_REPO="your_repo"
+export GITHUB_BLOG_AUTHOR="你的名字"
+EOF
+
+source ~/.zshrc
+```
+
+变量名与 `.env` 文件完全相同。
